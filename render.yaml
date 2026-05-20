@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ghost-chat
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && node src/index.js
+    envVars:
+      - key: PORT
+        value: "3001"
+      - key: CLIENT_ORIGIN
+        value: https://hellenicdev.github.io
+      - key: NODE_VERSION
+        value: "20"

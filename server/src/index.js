@@ -6,7 +6,7 @@ import { setupChatSocket } from './sockets/chatSocket.js';
 import healthRouter from './routes/health.js';
 
 const PORT = process.env.PORT || 3001;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'https://hellenicdev.github.io';
 
 const app = express();
 const server = createServer(app);
