@@ -6,7 +6,7 @@ import { setupChatSocket } from './sockets/chatSocket.js';
 import healthRouter from './routes/health.js';
 
 const PORT = process.env.PORT || 3001;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'https://hellenicdev.github.io';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'https://hellenicdev.eu';
 
 const app = express();
 const server = createServer(app);
@@ -20,6 +20,10 @@ const io = new Server(server, {
 
 app.use(cors({ origin: CLIENT_ORIGIN }));
 app.use(express.json());
+
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 app.use('/api', healthRouter);
 
