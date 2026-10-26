@@ -1,85 +1,139 @@
 import { generateNickname } from '../../../shared/nicknameGenerator.js';
 import * as roomService from '../services/roomService.js';
 import * as messageService from '../services/messageService.js';
-import { checkRateLimit } from '../utils/rateLimiter.js';
+import { checkRateLimit, clearRateLimit, getClientIp } from '../utils/rateLimiter.js';
+
+export const MAX_ROOM_ID_LENGTH = 64;
+const MAX_MESSAGE_LENGTH = 500;
+
+export function normalizeRoomId(roomId) {
+  if (typeof roomId !== 'string') return null;
+  const normalized = roomId.trim().toLowerCase();
+  if (!normalized || normalized.length > MAX_ROOM_ID_LENGTH) return null;
+  return normalized;
+}
+
+function guard(socket, event, handler) {
+  socket.on(event, (...args) => {
+    try {
+      handler(...args);
+    } catch (err) {
+      console.error(`socket ${event} failed:`, err);
+    }
+  });
+}
+
+function attachSocket(io, socket, db) {
+  let currentRoom = null;
+  const nickname = generateNickname();
+  const clientIp = getClientIp(socket);
+
+  socket.emit('nickname_assigned', nickname);
+
+  guard(socket, 'join_room', (roomId) => {
+    const normalized = normalizeRoomId(roomId);
+    if (!normalized) return;
+
+    if (currentRoom) {
+      socket.leave(currentRoom);
+      const leftUser = roomService.removeUserFromRoom(currentRoom, socket.id);
+      if (leftUser) {
+        io.to(currentRoom).emit('user_left', leftUser.nickname);
+        io.to(currentRoom).emit('room_users', roomService.getRoomUsers(currentRoom));
+      }
+    }
+
+    currentRoom = normalized;
+    socket.join(normalized);
+    roomService.addUserToRoom(normalized, socket.id, nickname);
+
+    let history = [];
+    if (db) {
+      try {
+        history = messageService.getMessageHistory(db, normalized);
+      } catch (err) {
+        console.error('Failed to load message history:', err);
+      }
+    }
+
+    socket.emit('room_joined', {
+      roomId: normalized,
+      nickname,
+      users: roomService.getRoomUsers(normalized),
+      messages: history
+    });
+
+    socket.to(normalized).emit('user_joined', nickname);
+    io.to(normalized).emit('room_users', roomService.getRoomUsers(normalized));
+  });
+
+  guard(socket, 'send_message', (data) => {
+    if (!data || typeof data !== 'object') return;
+    const roomId = normalizeRoomId(data.roomId);
+    if (!roomId) return;
+    if (typeof data.message !== 'string') return;
+
+    const text = data.message.trim().slice(0, MAX_MESSAGE_LENGTH);
+    if (!text) return;
+
+    const userNickname = roomService.getUserNickname(roomId, socket.id);
+    if (!userNickname) return;
+
+    if (!checkRateLimit(clientIp)) {
+      socket.emit('rate_limited', 'You are sending messages too fast. Please slow down.');
+      return;
+    }
+
+    const msg = {
+      nickname: userNickname,
+      message: text,
+      timestamp: new Date().toISOString()
+    };
+
+    if (db) {
+      try {
+        messageService.saveMessage(db, roomId, msg.nickname, msg.message);
+      } catch (err) {
+        console.error('Failed to save message:', err);
+      }
+    }
+
+    io.to(roomId).emit('new_message', msg);
+  });
+
+  guard(socket, 'typing', (payload) => {
+    if (!payload || typeof payload !== 'object') return;
+    const roomId = normalizeRoomId(payload.roomId);
+    if (!roomId) return;
+    if (typeof payload.isTyping !== 'boolean') return;
+
+    const userNickname = roomService.getUserNickname(roomId, socket.id);
+    if (!userNickname) return;
+
+    socket.to(roomId).emit('typing_update', {
+      nickname: userNickname,
+      isTyping: payload.isTyping
+    });
+  });
+
+  guard(socket, 'disconnect', () => {
+    clearRateLimit(clientIp);
+    if (!currentRoom) return;
+    const roomId = currentRoom;
+    currentRoom = null;
+    const leftUser = roomService.removeUserFromRoom(roomId, socket.id);
+    if (!leftUser) return;
+    io.to(roomId).emit('user_left', leftUser.nickname);
+    io.to(roomId).emit('room_users', roomService.getRoomUsers(roomId));
+  });
+}
 
 export function setupChatSocket(io, db) {
   io.on('connection', (socket) => {
-    let currentRoom = null;
-    let nickname = generateNickname();
-
-    socket.emit('nickname_assigned', nickname);
-
-    socket.on('join_room', (roomId) => {
-      if (!roomId || typeof roomId !== 'string') return;
-      roomId = roomId.trim().toLowerCase();
-      if (!roomId) return;
-
-      if (currentRoom) {
-        socket.leave(currentRoom);
-        const leftUser = roomService.removeUserFromRoom(currentRoom, socket.id);
-        if (leftUser) {
-          io.to(currentRoom).emit('user_left', leftUser.nickname);
-          io.to(currentRoom).emit('room_users', roomService.getRoomUsers(currentRoom));
-        }
-      }
-
-      currentRoom = roomId;
-      socket.join(roomId);
-      roomService.addUserToRoom(roomId, socket.id, nickname);
-
-      const history = db ? messageService.getMessageHistory(db, roomId) : [];
-
-      socket.emit('room_joined', {
-        roomId,
-        nickname,
-        users: roomService.getRoomUsers(roomId),
-        messages: history
-      });
-
-      socket.to(roomId).emit('user_joined', nickname);
-      io.to(roomId).emit('room_users', roomService.getRoomUsers(roomId));
-    });
-
-    socket.on('send_message', (data) => {
-      if (!data || !data.roomId || !data.message) return;
-      if (!checkRateLimit(socket.id)) {
-        socket.emit('rate_limited', 'You are sending messages too fast. Please slow down.');
-        return;
-      }
-
-      const { roomId, message } = data;
-      const userNickname = roomService.getUserNickname(roomId, socket.id);
-      if (!userNickname) return;
-
-      const msg = {
-        nickname: userNickname,
-        message: message.trim().slice(0, 500),
-        timestamp: new Date().toISOString()
-      };
-
-      if (db) {
-        messageService.saveMessage(db, roomId, msg.nickname, msg.message);
-      }
-
-      io.to(roomId).emit('new_message', msg);
-    });
-
-    socket.on('typing', ({ roomId, isTyping }) => {
-      if (!roomId) return;
-      const userNickname = roomService.getUserNickname(roomId, socket.id);
-      if (!userNickname) return;
-      socket.to(roomId).emit('typing_update', { nickname: userNickname, isTyping });
-    });
-
-    socket.on('disconnect', () => {
-      if (currentRoom) {
-        const leftUser = roomService.removeUserFromRoom(currentRoom, socket.id);
-        if (leftUser) {
-          io.to(currentRoom).emit('user_left', leftUser.nickname);
-          io.to(currentRoom).emit('room_users', roomService.getRoomUsers(currentRoom));
-        }
-      }
-    });
+    try {
+      attachSocket(io, socket, db);
+    } catch (err) {
+      console.error('socket connection setup failed:', err);
+    }
   });
 }

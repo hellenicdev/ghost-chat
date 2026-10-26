@@ -11,5 +11,9 @@ services:
         value: "3001"
       - key: CLIENT_ORIGIN
         value: https://hellenicdev.eu
+      - key: MESSAGE_TTL_HOURS
+        value: "24"
+      - key: MESSAGE_CLEANUP_INTERVAL_MS
+        value: "600000"
       - key: NODE_VERSION
         value: "20"

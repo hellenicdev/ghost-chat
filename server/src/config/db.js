@@ -21,8 +21,8 @@ export function getDb() {
   return db;
 }
 
-function initSchema() {
-  db.exec(`
+export function migrate(database) {
+  database.exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       room_id TEXT NOT NULL,
@@ -31,5 +31,10 @@ function initSchema() {
       timestamp TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id);
+    CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);
   `);
+}
+
+function initSchema() {
+  migrate(db);
 }
