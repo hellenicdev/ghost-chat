@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createRandomRoomId } from '../utils/roomId';
 
 export default function JoinPage({ onJoin, connected }) {
   const [roomId, setRoomId] = useState('');
@@ -7,6 +8,10 @@ export default function JoinPage({ onJoin, connected }) {
     e.preventDefault();
     if (!roomId.trim()) return;
     onJoin(roomId.trim());
+  }
+
+  function handleRandom() {
+    onJoin(createRandomRoomId());
   }
 
   return (
@@ -25,7 +30,7 @@ export default function JoinPage({ onJoin, connected }) {
             value={roomId}
             onChange={e => setRoomId(e.target.value)}
             placeholder="Enter room ID..."
-            maxLength={30}
+            maxLength={64}
             className="w-full bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 text-sm text-gray-100 placeholder-gray-600 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
           />
           <button
@@ -35,10 +40,18 @@ export default function JoinPage({ onJoin, connected }) {
           >
             {connected ? 'Join / Create Room' : 'Connecting...'}
           </button>
+          <button
+            type="button"
+            onClick={handleRandom}
+            disabled={!connected}
+            className="w-full bg-gray-900 hover:bg-gray-800 border border-gray-800 disabled:text-gray-600 text-gray-200 rounded-xl py-3.5 text-sm font-semibold transition-colors"
+          >
+            {connected ? 'Create random room' : 'Connecting...'}
+          </button>
         </form>
 
         <p className="text-center text-gray-600 text-xs mt-6">
-          No sign-up required. Everything is anonymous.
+          No sign-up required. Random room ids are unguessable, and old messages are deleted automatically.
         </p>
       </div>
     </div>

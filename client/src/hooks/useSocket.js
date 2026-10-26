@@ -71,7 +71,10 @@ export default function useSocket() {
   }, []);
 
   const joinRoom = useCallback((id) => {
-    socket.emit('join_room', id);
+    if (typeof id !== 'string') return;
+    const room = id.trim();
+    if (!room || room.length > 64) return;
+    socket.emit('join_room', room);
   }, []);
 
   const sendMessage = useCallback((message) => {
