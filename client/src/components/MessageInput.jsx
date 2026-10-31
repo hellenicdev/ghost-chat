@@ -28,7 +28,7 @@ export default function MessageInput({ onSend, onTyping }) {
           onChange={handleChange}
           placeholder="Type a message..."
           maxLength={500}
-          className="flex-1 bg-gray-800 text-gray-100 rounded-full px-5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
+          className="flex-1 bg-gray-800 text-gray-100 rounded-full px-5 py-2.5 text-sm outline-hidden focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-500"
         />
         <button
           type="submit"

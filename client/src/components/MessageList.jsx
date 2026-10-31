@@ -29,7 +29,7 @@ export default function MessageList({ messages, nickname }) {
               {!isOwn && (
                 <p className="text-xs text-indigo-400 font-medium mb-1">{msg.nickname}</p>
               )}
-              <p className="text-sm leading-relaxed break-words">{msg.message}</p>
+              <p className="text-sm leading-relaxed wrap-break-word">{msg.message}</p>
               {msg.timestamp && (
                 <p className={`text-xs mt-1 ${isOwn ? 'text-indigo-200' : 'text-gray-500'}`}>
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

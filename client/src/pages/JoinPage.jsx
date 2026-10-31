@@ -18,7 +18,7 @@ export default function JoinPage({ onJoin, connected }) {
     <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-linear-to-r/srgb from-indigo-400 to-purple-400 bg-clip-text text-transparent">
             GhostChat
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Anonymous. Instant. Ephemeral.</p>
@@ -31,7 +31,7 @@ export default function JoinPage({ onJoin, connected }) {
             onChange={e => setRoomId(e.target.value)}
             placeholder="Enter room ID..."
             maxLength={64}
-            className="w-full bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 text-sm text-gray-100 placeholder-gray-600 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 text-sm text-gray-100 placeholder:text-gray-600 outline-hidden focus:ring-2 focus:ring-indigo-500 transition-all"
           />
           <button
             type="submit"
