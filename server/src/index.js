@@ -17,6 +17,7 @@ const MESSAGE_TTL_HOURS = resolveMessageTtlHours(process.env.MESSAGE_TTL_HOURS);
 const MESSAGE_CLEANUP_INTERVAL_MS = resolveCleanupIntervalMs(process.env.MESSAGE_CLEANUP_INTERVAL_MS);
 
 const app = express();
+app.set('trust proxy', 1);
 const server = createServer(app);
 const io = attachSocketServer(server, CLIENT_ORIGIN);
 
