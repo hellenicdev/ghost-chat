@@ -4,19 +4,28 @@ export default function MessageList({ messages, nickname }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    bottomRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+    <div
+      className="flex-1 overflow-y-auto px-4 py-4 space-y-2"
+      role="log"
+      aria-live="polite"
+      aria-label="Chat messages"
+    >
       {messages.length === 0 && (
-        <p className="text-center text-gray-500 mt-8">No messages yet. Start the conversation!</p>
+        <div className="text-center text-gray-500 mt-8 space-y-1">
+          <p>No messages yet. Start the conversation!</p>
+          <p className="text-xs text-gray-600">Share the room ID so others can join.</p>
+        </div>
       )}
       {messages.map((msg, i) => {
         const isOwn = msg.nickname === nickname;
         return (
           <div
-            key={i}
+            key={msg._id || msg.id || `${msg.timestamp}-${msg.nickname}-${i}`}
             className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-slide-up`}
           >
             <div
