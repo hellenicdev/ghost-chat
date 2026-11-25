@@ -53,7 +53,7 @@ export default function ChatPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-950">
+    <main className="h-dvh min-h-screen flex flex-col bg-gray-950">
       {/* Header */}
       <header className="border-b border-gray-800 px-4 py-3 flex items-center justify-between gap-3 shrink-0">
         <div className="min-w-0">
@@ -68,6 +68,7 @@ export default function ChatPage({
           <button
             type="button"
             onClick={copyRoomId}
+            aria-live="polite"
             className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
           >
             {copied ? 'Copied' : 'Copy ID'}
@@ -93,6 +94,6 @@ export default function ChatPage({
 
       {/* Input */}
       <MessageInput onSend={onSend} onTyping={onTyping} />
-    </div>
+    </main>
   );
 }

@@ -15,13 +15,18 @@ export default function JoinPage({ onJoin, connected }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+    <main className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold bg-linear-to-r/srgb from-indigo-400 to-purple-400 bg-clip-text text-transparent">
             GhostChat
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Anonymous. Instant. Ephemeral.</p>
+          {!connected && (
+            <p className="text-xs text-gray-600 mt-3" role="status">
+              Connecting to the server. This can take a few seconds if it was asleep.
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -30,6 +35,8 @@ export default function JoinPage({ onJoin, connected }) {
             value={roomId}
             onChange={e => setRoomId(e.target.value)}
             placeholder="Enter room ID..."
+            aria-label="Room ID"
+            autoComplete="off"
             maxLength={64}
             className="w-full bg-gray-900 border border-gray-800 rounded-xl px-5 py-3.5 text-sm text-gray-100 placeholder:text-gray-600 outline-hidden focus:ring-2 focus:ring-indigo-500 transition-all"
           />
@@ -54,6 +61,6 @@ export default function JoinPage({ onJoin, connected }) {
           No sign-up required. Random room ids are unguessable, and old messages are deleted automatically.
         </p>
       </div>
-    </div>
+    </main>
   );
 }

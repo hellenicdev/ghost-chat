@@ -7,7 +7,7 @@ export default function MessageInput({ onSend, onTyping }) {
   function handleSubmit(e) {
     e.preventDefault();
     if (!text.trim()) return;
-    onSend(text);
+    onSend(text.trim());
     setText('');
     onTyping(false);
     inputRef.current?.focus();
@@ -27,11 +27,14 @@ export default function MessageInput({ onSend, onTyping }) {
           value={text}
           onChange={handleChange}
           placeholder="Type a message..."
+          aria-label="Message"
+          autoComplete="off"
           maxLength={500}
           className="flex-1 bg-gray-800 text-gray-100 rounded-full px-5 py-2.5 text-sm outline-hidden focus:ring-2 focus:ring-indigo-500 placeholder:text-gray-500"
         />
         <button
           type="submit"
+          aria-label="Send message"
           disabled={!text.trim()}
           className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-full px-5 py-2.5 text-sm font-medium transition-colors"
         >
